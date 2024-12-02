@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { SendHorizontal, Brain, StopCircle, Eraser } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAlertMessage } from "../../context/AlertMessageContext";
-import AlertTemplate from "../alert/AlertTemplate";
 import { IAIData, IAIPrompt, ISummary } from "../../interface/main.interface";
 
 import ReactMarkdown from "react-markdown";
@@ -18,6 +17,7 @@ import Header from "@/layout/Header";
 import axios from "axios";
 import { convertFileToBase64 } from "@/lib/utils";
 import { Checkbox } from "../ui/checkbox";
+import { useAuth } from "@/context/AuthContext";
 
 function Home() {
   const [summary, setSummary] = useState<ISummary>({
@@ -26,6 +26,8 @@ function Home() {
     prompt: "",
     result: "",
   });
+
+  const { user } = useAuth();
 
   const [aiDataList, setAIDataList] = useState<IAIPrompt>({ data: [] });
   const [progress, setProgress] = useState<boolean>();
@@ -115,8 +117,9 @@ function Home() {
         {
           headers: {
             "Content-Type": "multipart/form-data", // Important for file upload
+            Authorization: `Bearer ${user?.ssToken}`,
           },
-        },
+        }
       );
       setAIDataList((prevState: any) => ({
         ...prevState,
@@ -149,12 +152,12 @@ function Home() {
         if ((window as any).chrome.runtime.lastError) {
           console.error(
             "Error sending message:",
-            (window as any).chrome.runtime.lastError,
+            (window as any).chrome.runtime.lastError
           );
           return;
         }
         console.log("Message sent successfully");
-      },
+      }
     );
   };
 
@@ -186,9 +189,9 @@ function Home() {
                   JSON.stringify(response),
               }));
             }
-          },
+          }
         );
-      },
+      }
     );
   };
 
@@ -299,7 +302,9 @@ function Home() {
         show: true,
         type: "error",
         title: "Error",
-        description: `Failed to complete summarization: ${error.message || error}`,
+        description: `Failed to complete summarization: ${
+          error.message || error
+        }`,
       }));
 
       setProgress(false);
@@ -442,7 +447,7 @@ function Home() {
         show: true,
         type: "error",
         title: "Error",
-        description: "Chrome Extension is needed to run this feature. " + error,
+        description: error.message,
       }));
 
       //clearn up the summary
@@ -469,18 +474,25 @@ function Home() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${user?.ssToken}`,
         },
         body: JSON.stringify({
           prompt: summary.prompt,
           history: updatedCustomPrompts,
         }),
         signal: abortController.current.signal,
-      },
+      }
     );
 
     // Check if the response is OK
     if (!response.ok) {
-      throw new Error("Failed to generate content");
+      // Attempt to parse error details from the response
+      const errorDetails = await response.json().catch(() => null); // Gracefully handle invalid JSON
+      const errorMessage =
+        errorDetails?.error ||
+        errorDetails?.message ||
+        "Failed to generate content";
+      throw new Error(`Error: ${errorMessage} (status: ${response.status})`);
     }
     if (response.body == null) {
       throw new Error("Response body is null");
@@ -701,7 +713,6 @@ function Home() {
               ) : null}
             </>
             <div ref={messagesEndRef} />
-            <AlertTemplate />
           </div>
         </div>
       </div>
@@ -740,7 +751,9 @@ function Home() {
           <div className="chat flex relative flex-col">
             <div className="relative w-full">
               <Input
-                className={`h-[50px] text-sm ${aiDataList?.data?.length > 0 ? "pr-[110px]" : "pr-[50px]"}`}
+                className={`h-[50px] text-sm ${
+                  aiDataList?.data?.length > 0 ? "pr-[110px]" : "pr-[50px]"
+                }`}
                 placeholder="Enter your question here"
                 value={summary.prompt}
                 onChange={(e) =>

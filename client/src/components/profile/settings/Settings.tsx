@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Header from "@/layout/Header";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -12,6 +13,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import axios from "axios";
+import { useAuth } from "@/context/AuthContext";
+import { useAlertMessage } from "@/context/AlertMessageContext";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   apiKey: z.string().min(1, "API Key is required"),
@@ -24,10 +29,74 @@ function Settings() {
       apiKey: "",
     },
   });
+  const { user } = useAuth();
+  const { setAlertMessage } = useAlertMessage();
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-  }
+  useEffect(() => {
+    getUser();
+  }, []);
+
+  const getUser = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:3000/api/protected/user/${user?.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.ssToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      form.setValue("apiKey", response.data.geminiApiKey);
+    } catch (error: any) {
+      setAlertMessage({
+        show: true,
+        title: "Error",
+        description: error.message,
+        position: "top",
+      });
+    }
+  };
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setAlertMessage({
+      show: true,
+      position: "top",
+      title: "Error updating user",
+      description: "sd",
+    });
+    try {
+      await axios.put(
+        "http://localhost:3000/api/protected/user/update",
+        {
+          geminiApiKey: values.apiKey,
+          googleId: user?.googleId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user?.ssToken}`, // Replace with your actual token
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      setAlertMessage({
+        show: true,
+        title: "Info",
+        description: "User updated successfully",
+        position: "top",
+        type: "success",
+      });
+    } catch (error: any) {
+      setAlertMessage({
+        show: true,
+        title: "Error updating user",
+        description: error.message,
+        position: "top",
+      });
+    }
+  };
 
   return (
     <div>

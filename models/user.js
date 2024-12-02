@@ -13,19 +13,23 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   }
-  User.init({
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey:true,
-      autoIncrement: true, 
+  User.init(
+    {
+      id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      name: DataTypes.STRING,
+      googleId: DataTypes.STRING,
+      geminiApiKey: DataTypes.STRING,
+      createdAt: DataTypes.DATE,
+      updatedAt: DataTypes.DATE,
     },
-    name: DataTypes.STRING,
-    googleId: DataTypes.STRING,
-    createdAt: DataTypes.DATE,
-    updatedAt: DataTypes.DATE
-  }, {
-    sequelize,
-    modelName: 'User'
-  });
+    {
+      sequelize,
+      modelName: "User",
+    }
+  );
   return User;
 };

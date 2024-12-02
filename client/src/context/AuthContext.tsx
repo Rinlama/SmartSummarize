@@ -2,10 +2,13 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 
 // Define types for authentication state and context value
 interface User {
+  id: string;
   name: string;
   email: string;
   picture: string;
-  token: string;
+  googleToken: string;
+  googleId: string;
+  ssToken: string;
 }
 
 interface AuthContextType {

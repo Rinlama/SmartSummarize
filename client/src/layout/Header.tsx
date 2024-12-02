@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import AlertTemplate from "@/components/alert/AlertTemplate";
 import {
   Menubar,
   MenubarContent,
@@ -25,7 +26,7 @@ function Header() {
   const conductListener = () => {
     chrome.identity.onSignInChanged.addListener(function (
       _account: any,
-      _signedIn: any,
+      _signedIn: any
     ) {
       chrome.identity.clearAllCachedAuthTokens(() => {
         if (window.location.hash === "#/auth") {
@@ -84,16 +85,16 @@ function Header() {
                         { url: "https://accounts.google.com/logout" },
                         function async() {
                           chrome.identity.removeCachedAuthToken(
-                            { token: user?.token },
+                            { token: user?.googleToken },
                             () => {
-                              if (user?.token) {
-                                revokeToken(user?.token);
+                              if (user?.googleToken) {
+                                revokeToken(user?.googleToken);
                                 logout();
                               }
-                            },
+                            }
                           );
                           navigate("/auth");
-                        },
+                        }
                       );
                     }}
                   >
@@ -105,6 +106,7 @@ function Header() {
           )}
         </div>
       </div>
+      <AlertTemplate />
     </div>
   );
 }

@@ -6,6 +6,7 @@ interface AlertMessage {
   title?: string;
   description?: string;
   type?: "success" | "error" | "info" | "warning";
+  position?: "top" | "bottom";
 }
 
 // Create context with default value
@@ -13,7 +14,13 @@ const AlertMessageContext = createContext<{
   alertMessage: AlertMessage;
   setAlertMessage: React.Dispatch<React.SetStateAction<AlertMessage>>;
 }>({
-  alertMessage: { show: false, title: "", description: "", type: "info" },
+  alertMessage: {
+    show: false,
+    title: "",
+    description: "",
+    type: "info",
+    position: "bottom",
+  },
   setAlertMessage: () => {},
 });
 
@@ -30,6 +37,7 @@ export const AlertMessageProvider: React.FC<AlertProviderProps> = ({
     title: "",
     description: "",
     type: "info",
+    position: "bottom",
   });
 
   return (

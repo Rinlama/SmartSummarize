@@ -24,7 +24,7 @@ function GoogleLogin() {
     try {
       chrome.identity.getAuthToken({ interactive }, (token: string) => {
         if (chrome.runtime.lastError) {
-          console.error(`${chrome.runtime.lastError} - ${token}`); 
+          console.error(`${chrome.runtime.lastError} - ${token}`);
         } else {
           loginWithGoogle(token);
         }
@@ -42,7 +42,7 @@ function GoogleLogin() {
         "http://localhost:3000/api/auth/login",
         {
           token, // Send the Google ID token as part of the request body
-        },
+        }
       );
 
       // Handle the response from the server
@@ -50,10 +50,13 @@ function GoogleLogin() {
         const user = response.data;
         console.log("Login successful:", user);
         login({
-          email: "sdf",
-          name: "sdf",
-          picture: "sdf",
-          token,
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          picture: user.picture,
+          googleToken: token,
+          googleId: user.googleId,
+          ssToken: user.ssToken,
         });
         setLoading(false);
         console.log("Navigating to /home");
