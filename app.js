@@ -73,7 +73,9 @@ const PORT = process.env.PORT || 3000;
 // Function to start the server with proper error handling
 const startServer = async () => {
   try {
-    await db.sequelize.sync({ force: false });
+    const forceSync = process.env.FORCE_SYNC === "true";
+
+    await db.sequelize.sync({ force: FORCE_SYNC });
     app.listen(PORT, () => {
       console.log(`App is running on port ${PORT}`);
     });

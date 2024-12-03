@@ -1,53 +1,73 @@
 # Smart Summarize Chrome Extension
 
-Welcome to **Smart Summarize**, a powerful Chrome extension designed to enhance your browsing experience by summarizing content and providing intelligent responses effortlessly. Whether you're reading articles, browsing through technical documentation, or working with code, Smart Summarize can help you save time and get more out of your web browsing.
+**Smart Summarize** is a cutting-edge Chrome extension that brings efficiency and intelligence to your web browsing experience. Whether you're reading articles, analyzing code, or working with documents, Smart Summarize helps you save time and extract relevant information effortlessly.
 
 ## Key Features
 
 ### 1. **Web Page Summarization**
-   - Generate concise summaries of the content on the current web page.
-   - Quickly understand the key points without needing to read the entire page.
+   - Generate concise summaries of the content on the current web page, saving you time and effort while browsing. Whether it’s an article, blog post, or news page, you’ll quickly get the essential points.
 
 ### 2. **File-Based Summarization**
-   Smart Summarize supports summarizing content from various file types, including:
-
-   - **PDFs** (`application/pdf`)
-   - **JavaScript files** (`application/x-javascript`, `text/javascript`)
-   - **Python files** (`application/x-python`, `text/x-python`)
-   - **Plain text files** (`text/plain`)
-   - **HTML documents** (`text/html`)
-   - **CSS files** (`text/css`)
-   - **Markdown files** (`text/md`)
-   - **CSV files** (`text/csv`)
-   - **XML files** (`text/xml`)
-   - **RTF documents** (`text/rtf`)
+   - Summarize text from a variety of file types:
+     - **PDFs** (`application/pdf`)
+     - **JavaScript files** (`application/x-javascript`, `text/javascript`)
+     - **Python files** (`application/x-python`, `text/x-python`)
+     - **Plain text files** (`text/plain`)
+     - **HTML documents** (`text/html`)
+     - **CSS files** (`text/css`)
+     - **Markdown files** (`text/md`)
+     - **CSV files** (`text/csv`)
+     - **XML files** (`text/xml`)
+     - **RTF documents** (`text/rtf`)
 
 ### 3. **Custom Query Feature**
-   A convenient checkbox lets users ask specific questions about the current webpage, such as:
-
-   - **For articles**: Quickly inquire about the publication date, author, and other details.
-   - **For platforms like Stack Overflow**: Extract information such as the question's author, post date, and more.
+   - Easily ask questions about the current webpage or content using a convenient checkbox. 
+     - **For articles**: Quickly inquire about the publication date, author, and more.
+     - **For platforms like Stack Overflow**: Extract details such as the author, post date, and more.
 
 ### 4. **Integrated AI Assistant**
-   - Users can interact with a default LLM (1.5 Flash Google) to ask anything.
-   - Get AI-driven insights, answers, or explanations on various topics with ease.
+   - Users can interact with a default **LLM (1.5 Flash Google)** to ask anything and get AI-driven insights, explanations, and answers on a wide range of topics.
+   
+### 5. **Authentication & Authorization**
+   - The extension uses **Chrome Identity API** to authenticate users with Google OAuth2 credentials.
+   - Token validation and user verification are handled through the backend, built on an **Express server**.
 
 ## Setup Instructions
 
 ### 1. **OAuth Client ID Configuration**
-   To use the extension, you need to add the OAuth Client ID from your credentials in Google Cloud Gemeni API.
-
-   - Make sure to add the **same Item ID** in the extension's manifest file to avoid errors.
-   - If the item ID is incorrect, the extension will throw an error like:
+   - Add the OAuth Client ID from Google Cloud Gemeni API to the `manifest.json` of the Chrome extension.
+   - Ensure the **Item ID** in the extension matches the one in the manifest, or you will get an error:
      ```
      Service responded with error: 'bad client id: 15131531312312315315315315.apps.googleusercontent.com'
      ```
 
-### 2. **Adding Summarization API and Prompt API**
-   - Integrate the Summarization API and Prompt API for Chrome Extensions using [Chrome Origin Trials](https://developer.chrome.com/origintrials).
-   - Ensure that your **Chrome extension ID** is the same as specified in the API configuration.
+### 2. **Integrate Summarization API & Prompt API**
+   - Use the **Google Chrome AI APIs** for Summarization and Prompt APIs:  
+     - [Summarize API](https://developer.chrome.com/docs/ai/summarizer-api)
+     - [Prompt API](https://developer.chrome.com/docs/extensions/ai/prompt-api)
+   - Also, integrate **Google Gemini API**:
+     - [Prompt API](https://ai.google.dev/gemini-api/docs/text-generation?lang=node)
+     - [Document Processing](https://ai.google.dev/gemini-api/docs/document-processing?lang=node)
+   - Ensure that the **Chrome extension ID** is the same in the API configuration.
 
-## Conclusion
-Smart Summarize is a must-have tool for anyone who wants to streamline their web browsing and quickly access important content. Whether it's a webpage, a code snippet, or a document, Smart Summarize provides the tools you need to work smarter and faster.
+## Tech Stack
 
-For more information, visit the [official extension page](#).
+### Frontend:
+   - **Google Chrome Extension** using **Google Chrome’s built-in AI models** (Gemini Nano).
+   - **React**, **React Router**, **Shadcn**, **Tailwind**, **React Context** for efficient state management.
+
+### Backend:
+   - **Node.js** and **Express** for backend logic and handling API requests.
+   - **Sequelize** for ORM and database management with MySQL.
+   - **Google Gemini API** for AI-powered summarization and document processing.
+
+## How to Start the Application
+
+### Backend Setup (Express)
+1. Create a `.env` file in the main folder by copying `env.example`.
+2. Add MySQL credentials in the `.env` file.
+3. If `FORCE_SYNC=true`, the server will automatically sync the database schema on every refresh.
+4. Run the following commands:
+   ```bash
+   npm install
+   npm start
