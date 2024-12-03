@@ -1,43 +1,58 @@
 const express = require("express");
-const {
-  GoogleGenerativeAI,
-  HarmCategory,
-  HarmBlockThreshold,
-} = require("@google/generative-ai");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 const multer = require("multer");
+const { User } = require("../../../models");
 
 const router = express.Router();
 
 // Set up multer storage (using memory storage to store file in buffer)
 const storage = multer.memoryStorage();
 const upload = multer({ storage }); // Handle multiple file uploads
-const { User } = require("../../../models");
 
 // Converts base64 data to a GoogleGenerativeAI.Part object
-function base64ToGenerativePart(base64Data, mimeType) {
-  return {
-    inlineData: {
-      data: base64Data,
-      mimeType,
-    },
-  };
-}
+const base64ToGenerativePart = (base64Data, mimeType) => ({
+  inlineData: {
+    data: base64Data,
+    mimeType,
+  },
+});
 
-// Function to fetch Geiminikey
-async function getGeminikey(userId) {
+// Utility function to fetch Gemini API key for a user
+const getGeminikey = async (userId) => {
   const user = await User.findByPk(userId, {
     attributes: ["geminiApiKey"],
   });
-  return user ? user.geminiApiKey : null; // Return null if the user is not found
-}
+  return user ? user.geminiApiKey : null; // Return null if user not found
+};
 
-// Define the AI model and generation config
+// Define the AI model generation configuration
 const generationConfig = {
   temperature: 0.9,
   topP: 0.95,
   topK: 40,
   maxOutputTokens: 8192,
   responseMimeType: "text/plain",
+};
+
+// Helper function to handle the generation and response logic
+const generateContent = async (userId, fileParts, prompt) => {
+  const geminikey = await getGeminikey(userId);
+  if (!geminikey) {
+    throw new Error("User not found or geminikey missing");
+  }
+
+  const genAI = new GoogleGenerativeAI(geminikey);
+
+  // Choose the Gemini model for content generation
+  const model = genAI.getGenerativeModel({
+    model: "gemini-1.5-flash",
+    generationConfig,
+  });
+
+  // Generate content based on files and prompt
+  const generatedContent = await model.generateContent([prompt, ...fileParts]);
+
+  return generatedContent.response.text();
 };
 
 // Protected route to process files and generate content
@@ -49,48 +64,30 @@ router.post("/process-files", upload.array("files"), async (req, res) => {
     }
 
     // Convert the uploaded files to base64 format
-    const fileParts = req.files.map(function (file) {
-      const base64Data = file.buffer.toString("base64"); // Convert file buffer to base64
-      return base64ToGenerativePart(base64Data, file.mimetype); // Create generative part for each file
+    const fileParts = req.files.map((file) => {
+      const base64Data = file.buffer.toString("base64");
+      return base64ToGenerativePart(base64Data, file.mimetype);
     });
 
     const userId = req.user.userId;
-    const geminikey = await getGeminikey(userId);
-    if (!geminikey) {
-      return res
-        .status(404)
-        .json({ error: "User not found or geminikey missing" });
-    }
+    const prompt = "Summarize the uploaded files."; // The prompt for the AI model
 
-    const genAI = new GoogleGenerativeAI(geminikey);
+    // Generate content based on the files and prompt
+    const generatedContent = await generateContent(userId, fileParts, prompt);
 
-    // Choose the Gemini model for content generation
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      generationConfig,
-    });
-
-    // Define the prompt for content generation
-    const prompt = "Summarize the uploaded files.";
-
-    // Generate content based on the model and the prompt along with the uploaded files
-    const generatedContent = await model.generateContent(
-      [prompt].concat(fileParts)
-    );
-
-    // Send back the generated response
+    // Return the generated content to the client
     return res.json({
-      response: generatedContent.response.text(),
+      response: generatedContent,
     });
   } catch (error) {
-    console.error("Error processing files:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message || "Internal server error" });
   }
 });
 
+// Route to generate content with streaming response
 router.post("/generate-content-stream", async (req, res) => {
   try {
-    // Get the prompt from the request body
+    // Get the prompt and history from the request body
     const { prompt, history } = req.body;
 
     if (!prompt) {
@@ -108,6 +105,7 @@ router.post("/generate-content-stream", async (req, res) => {
         .status(404)
         .json({ error: "User not found or geminikey missing" });
     }
+
     const genAI = new GoogleGenerativeAI(geminikey);
 
     // Choose the Gemini model for content generation
@@ -132,12 +130,8 @@ router.post("/generate-content-stream", async (req, res) => {
     // End the stream after all chunks are sent
     res.end();
   } catch (error) {
-    console.error("Error generating content stream:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message || "Internal server error" });
   }
 });
-
-
-
 
 module.exports = router;

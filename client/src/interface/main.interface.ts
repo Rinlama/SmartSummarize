@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface IAlert {
   show: boolean;
   title?: string;
@@ -21,4 +22,15 @@ export interface IAIData {
 
 export interface IAIPrompt {
   data: Array<IAIData>;
+}
+
+export interface Prompt {
+  role: "user" | "assistant" | "system" | "model";
+  content?: string;
+  parts?: Array<{ text: string }>;
+}
+
+export interface CustomPrompt {
+  prompt: string;
+  history: Array<any>;
 }

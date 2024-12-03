@@ -30,10 +30,6 @@ function Profile() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-  }
-
   return (
     <div>
       <Header />
@@ -47,7 +43,7 @@ function Profile() {
           />
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form className="space-y-8">
               <FormField
                 control={form.control}
                 name="name"

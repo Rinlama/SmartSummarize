@@ -25,6 +25,8 @@ module.exports = (sequelize, DataTypes) => {
       geminiApiKey: DataTypes.STRING,
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
+      picture: DataTypes.STRING,
+      email: DataTypes.STRING,
     },
     {
       sequelize,

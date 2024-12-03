@@ -16,6 +16,7 @@ import { CircleUser, LogOut, Settings } from "lucide-react";
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+// TypeScript type declarations for Chrome API usage
 declare const chrome: any;
 
 function Header() {
@@ -23,45 +24,64 @@ function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const { setAlertMessage } = useAlertMessage();
 
+  // Handles changes in Google sign-in status
   const conductListener = () => {
-    chrome.identity.onSignInChanged.addListener(function (
-      _account: any,
-      _signedIn: any
-    ) {
-      chrome.identity.clearAllCachedAuthTokens(() => {
-        if (window.location.hash === "#/auth") {
-          window.location.hash = "#/refresh";
-          navigate("/auth");
-        } else {
-          navigate("/auth");
-        }
+    if (chrome && chrome.identity) {
+      chrome.identity.onSignInChanged.addListener(function (
+        _account: any,
+        _signedIn: boolean
+      ) {
+        chrome.identity.clearAllCachedAuthTokens(() => {
+          if (location.hash === "#/auth") {
+            location.hash = "#/refresh";
+            navigate("/auth");
+          } else {
+            navigate("/auth");
+          }
+        });
       });
-    });
-  };
-  useEffect(() => {
-    try {
-      conductListener();
-    } catch (error) {
+    } else {
       setAlertMessage({
         title: "Error",
-        description: "Please run on Chrome extension",
+        description: "Please run this app on a Chrome extension.",
         show: true,
       });
-      return;
     }
-  }, []);
+  };
+
+  useEffect(() => {
+    conductListener();
+  }, []); // Empty dependency array ensures this runs once on mount
+
+  const handleLogout = () => {
+    if (user?.googleToken) {
+      chrome.identity.launchWebAuthFlow(
+        { url: "https://accounts.google.com/logout" },
+        function () {
+          chrome.identity.removeCachedAuthToken(
+            { token: user?.googleToken },
+            () => {
+              revokeToken(user?.googleToken); // Revoke the token
+              logout(); // Logout from the app
+              navigate("/auth");
+            }
+          );
+        }
+      );
+    }
+  };
 
   return (
     <div>
       <div className="flex justify-between shadow-lg p-2 absolute bg-white w-full">
         <Link to="/">
-          <p className="text-xs fo text-gray-700">
+          <p className="text-xs text-gray-700">
             Effortless Summaries, Powered by Gemini AI
           </p>
         </Link>
 
         <div>
-          {!isAuthenticated ? null : (
+          {isAuthenticated && (
             <Menubar>
               <MenubarMenu>
                 <MenubarTrigger>
@@ -80,23 +100,7 @@ function Header() {
                   </Link>
                   <MenubarItem
                     className="cursor-pointer"
-                    onClick={() => {
-                      chrome.identity.launchWebAuthFlow(
-                        { url: "https://accounts.google.com/logout" },
-                        function async() {
-                          chrome.identity.removeCachedAuthToken(
-                            { token: user?.googleToken },
-                            () => {
-                              if (user?.googleToken) {
-                                revokeToken(user?.googleToken);
-                                logout();
-                              }
-                            }
-                          );
-                          navigate("/auth");
-                        }
-                      );
-                    }}
+                    onClick={handleLogout}
                   >
                     <LogOut /> <p className="mx-2">Log Out</p>
                   </MenubarItem>

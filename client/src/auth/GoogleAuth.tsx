@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Spinner } from "@/components/ui/spinner";
@@ -9,6 +8,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+// TypeScript type declarations for chrome.identity
 declare const chrome: any;
 
 function GoogleLogin() {
@@ -16,10 +16,12 @@ function GoogleLogin() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
+  // Function to initiate the login process by getting the Google token
   const handleLogin = () => {
     getToken(true);
   };
 
+  // Function to retrieve the auth token from Chrome identity API
   const getToken = (interactive: boolean) => {
     try {
       chrome.identity.getAuthToken({ interactive }, (token: string) => {
@@ -34,21 +36,17 @@ function GoogleLogin() {
     }
   };
 
+  // Function to log in with the Google token
   const loginWithGoogle = async (token: string) => {
     setLoading(true);
     try {
-      // Send the Google ID token to the backend for verification and user login/creation
       const response = await axios.post(
         "http://localhost:3000/api/auth/login",
-        {
-          token, // Send the Google ID token as part of the request body
-        }
+        { token }
       );
 
-      // Handle the response from the server
       if (response.status === 200) {
         const user = response.data;
-        console.log("Login successful:", user);
         login({
           id: user.id,
           email: user.email,
@@ -59,84 +57,33 @@ function GoogleLogin() {
           ssToken: user.ssToken,
         });
         setLoading(false);
-        console.log("Navigating to /home");
-        navigate("/home");
-        window.location.hash = "#/home";
+        navigate("/chatbox");
+        window.location.hash = "#/chatbox";
       } else {
+        setLoading(false);
         console.error("Login failed:", response.data.message);
       }
     } catch (error) {
+      setLoading(false);
+      console.error("Error logging in:", error);
+      // Remove token on error and optionally revoke it
       chrome.identity.removeCachedAuthToken({ token }, () => {
         console.log("Token cleared.");
-        revokeTokenCalled(token); // Optional: Revoke the token from Google
+        revokeToken(token);
       });
-      console.error("Error logging in:", error);
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // const validateToken = async (token: string) => {
-  //   try {
-  //     const response = await fetch(
-  //       `https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${token}`,
-  //     );
-  //     const data = await response.json();
-
-  //     if (data.error === "invalid_token") {
-  //       // Remove the cached token
-  //       chrome.identity.removeCachedAuthToken({ token }, () => {
-  //         console.log("Token cleared.");
-  //         revokeToken(token); // Optional: Revoke the token from Google
-  //       });
-  //       return;
-  //     }
-  //     userInfo(token);
-  //   } catch (error) {
-  //     console.error("Error validating token:", error);
-  //     setLoading(false);
-  //     console.error("Error verifying token:", error);
-  //   }
-  // };
-
-  const revokeTokenCalled = async (token: string) => revokeToken(token);
-
-  // const userInfo = async (token: string) => {
-  //   try {
-  //     const response = await fetch(
-  //       "https://www.googleapis.com/oauth2/v1/userinfo?alt=json",
-  //       {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       },
-  //     );
-
-  //     if (!response.ok) {
-  //       throw new Error("Failed to fetch user info.");
-  //     }
-
-  //     const userData = await response.json();
-  //     login({
-  //       email: userData.email,
-  //       name: userData.name,
-  //       picture: userData.picture,
-  //     });
-  //     setLoading(false);
-  //     navigate("/home");
-  //   } catch (error) {
-  //     setLoading(false);
-  //     console.error("Error fetching user info:", error);
-  //   }
-  // };
-
+  // Effect hook to automatically fetch token on mount (non-interactive)
   useEffect(() => {
     getToken(false);
-  }, [navigate]);
+  }, []); // Empty dependency array ensures this only runs on mount
 
   return (
     <div>
       <Header />
       {loading ? (
-        <div className="pt-14">
-          {" "}
+        <div className="pt-14 flex justify-center">
           <Spinner className="" /> Loading...
         </div>
       ) : (

@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
-import Home from "@/components/home/Home";
 import GoogleAuth from "@/auth/GoogleAuth";
 import Profile from "@/components/profile/Profile";
 import Settings from "@/components/profile/settings/Settings";
-
-declare const chrome: any;
+import Chatbox from "@/components/home/chatbox/Chatbox";
 
 function DomRouter() {
   return (
@@ -15,7 +13,7 @@ function DomRouter() {
         {/* Main Router */}
         <Route path="/" element={<Navigate to="/auth"></Navigate>}></Route>
         {/* Home Router */}
-        <Route path="home" element={<Home />} />
+        <Route path="chatbox" element={<Chatbox />} />
         <Route path="auth" element={<GoogleAuth />} />
 
         {/* snippets Routes */}

@@ -20,7 +20,7 @@ router.get("/:id", async (req, res) => {
 // POST /update - Update user information
 router.put("/update", async (req, res) => {
   try {
-    const { googleId, geminiApiKey } = req.body; // Expecting the Google ID token and Gemini API key from the client-side
+    const { googleId, geminiApiKey } = req.body;
 
     if (!googleId) {
       return res.status(400).json({ message: "Google ID is required" });
@@ -43,7 +43,6 @@ router.put("/update", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
   } catch (error) {
-    console.error("Error updating user:", error);
     return res.status(500).json({ message: "Internal server error", error });
   }
 });

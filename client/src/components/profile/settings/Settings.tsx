@@ -60,12 +60,6 @@ function Settings() {
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setAlertMessage({
-      show: true,
-      position: "top",
-      title: "Error updating user",
-      description: "sd",
-    });
     try {
       await axios.put(
         "http://localhost:3000/api/protected/user/update",

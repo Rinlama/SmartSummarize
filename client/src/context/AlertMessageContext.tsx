@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, ReactNode } from "react";
 
 // Define types for the alert message structure
-interface AlertMessage {
+export interface IAlertMessage {
   show: boolean;
   title?: string;
   description?: string;
@@ -11,8 +11,8 @@ interface AlertMessage {
 
 // Create context with default value
 const AlertMessageContext = createContext<{
-  alertMessage: AlertMessage;
-  setAlertMessage: React.Dispatch<React.SetStateAction<AlertMessage>>;
+  alertMessage: IAlertMessage;
+  setAlertMessage: React.Dispatch<React.SetStateAction<IAlertMessage>>;
 }>({
   alertMessage: {
     show: false,
@@ -32,7 +32,7 @@ interface AlertProviderProps {
 export const AlertMessageProvider: React.FC<AlertProviderProps> = ({
   children,
 }) => {
-  const [alertMessage, setAlertMessage] = useState<AlertMessage>({
+  const [alertMessage, setAlertMessage] = useState<IAlertMessage>({
     show: false,
     title: "",
     description: "",

@@ -8,7 +8,7 @@ const userRouter = require("./userRoutes/userRoutes"); // Adjust path if necessa
 // Define the /highlight route under /protected
 router.use("/generativeai", generativeAIRouter);
 
-// Define the /highlight route under /protected
+// Define the /user route under /protected
 router.use("/user", userRouter);
 
 module.exports = router;

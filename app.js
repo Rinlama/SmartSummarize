@@ -1,57 +1,104 @@
-require("dotenv").config(); // Load environment variables from .env file
+require("dotenv").config(); // Load environment variables
 const express = require("express");
-const cookieParser = require("cookie-parser");
 const path = require("path");
 const cors = require("cors");
-const authRoutes = require("./routes/authRoutes/authRoutes"); // Adjust path if necessary
-const { verifyToken } = require("./middleware/authMiddleware"); // Adjust path if necessary
-
-const protectedRouter = require("./routes/protectedRoutes/protectedRoutes"); // Adjust path if necessary
+const helmet = require("helmet"); // For securing HTTP headers
+const morgan = require("morgan"); // For logging HTTP requests
+const authRoutes = require("./routes/authRoutes/authRoutes");
+const { verifyToken } = require("./middleware/authMiddleware");
+const protectedRouter = require("./routes/protectedRoutes/protectedRoutes");
 
 const app = express();
 
-app.use(
-  cors({
-    origin: "http://localhost:5173", // Replace with your front-end URL
-    credentials: true,
-  })
-);
+// CORS Configuration
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || "http://localhost:5173", // Allow dynamic CORS configuration
+  credentials: true, // Allow cookies to be sent
+};
+
+// Security Headers Middleware using helmet
+app.use(helmet());
+
+// Logger Middleware (Logs HTTP requests)
+app.use(morgan("combined"));
+
+// CORS Middleware
+app.use(cors(corsOptions));
 
 // Middleware to parse JSON request bodies
 app.use(express.json({ limit: "50mb" }));
 
-// Middleware to parse cookies
-app.use(cookieParser());
-
-// Use the authentication routes
+// Authentication Routes
 app.use("/api/auth", authRoutes);
-// Example of a protected route
+
+// Protected Routes
 app.use("/api/protected", verifyToken, protectedRouter);
 
-app.get("/api/check-auth", (req, res) => {
-  if (req.cookies["token"]) {
-    // Validate token
-    res.json({ isAuthenticated: true });
-  } else {
-    res.json({ isAuthenticated: false });
-  }
+// Health Check Route (useful in production and for monitoring)
+app.get("/api/health", (req, res) => {
+  res
+    .status(200)
+    .json({ status: "ok", message: "Server is running smoothly." });
 });
-// Serve static files from the 'client/dist' directory
+
+// Authentication Check Route
+app.get("/api/check-auth", (req, res) => {
+  const isAuthenticated = Boolean(req.cookies["token"]);
+  res.json({ isAuthenticated });
+});
+
+// Serve Static Files from 'public' directory
 app.use(express.static(path.join(__dirname, "public")));
 
-// Handle all other routes by serving the index.html file
+// Catch-all Route for SPAs
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "client", "dist", "index.html"));
 });
 
-// sequelize
-const db = require("./models");
-// Define the port to listen on
-const PORT = process.env.PORT || 3000;
-
-db.sequelize.sync({ force: false }).then(() => {
-  app.listen(PORT, () => {
-    console.log("App is running on port " + PORT);
+// Error Handling Middleware (Centralized for consistency)
+app.use((err, req, res, next) => {
+  console.error("Error:", err.message);
+  res.status(err.status || 500).json({
+    error: err.message,
+    stack: process.env.NODE_ENV === "development" ? err.stack : {},
   });
 });
 
+// Database Connection (Sequelize)
+const db = require("./models");
+
+// Define the port to listen on
+const PORT = process.env.PORT || 3000;
+
+// Function to start the server with proper error handling
+const startServer = async () => {
+  try {
+    await db.sequelize.sync({ force: false });
+    app.listen(PORT, () => {
+      console.log(`App is running on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error("Error syncing database:", err);
+    process.exit(1); // Exit process if DB sync fails
+  }
+};
+
+// Start the server
+startServer();
+
+// Graceful Shutdown (For production readiness)
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received, closing server...");
+  app.close(() => {
+    console.log("Server closed gracefully");
+    process.exit(0);
+  });
+});
+
+process.on("SIGINT", () => {
+  console.log("SIGINT received, closing server...");
+  app.close(() => {
+    console.log("Server closed gracefully");
+    process.exit(0);
+  });
+});

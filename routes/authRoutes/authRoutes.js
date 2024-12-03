@@ -2,9 +2,10 @@ const express = require("express");
 const router = express.Router();
 const { User } = require("../../models");
 const jwt = require("jsonwebtoken");
+const fetch = require("node-fetch");
 const { JWT_SECRET_KEY } = process.env;
 
-// Utility function to fetch user info
+// Utility function to fetch user info from Google
 const fetchUserInfo = async (token) => {
   try {
     const response = await fetch(
@@ -15,7 +16,7 @@ const fetchUserInfo = async (token) => {
     );
 
     if (!response.ok) {
-      throw new Error("Failed to fetch user info.");
+      throw new Error("Failed to fetch user info from Google.");
     }
 
     return await response.json();
@@ -25,7 +26,7 @@ const fetchUserInfo = async (token) => {
   }
 };
 
-// Function to validate the token
+// Function to validate Google token
 const validateToken = async (token) => {
   try {
     const response = await fetch(
@@ -34,15 +35,59 @@ const validateToken = async (token) => {
     const data = await response.json();
 
     if (data.error === "invalid_token") {
-      // Token is invalid, handle the invalid case
       return { valid: false, message: "Invalid token" };
     }
 
-    // Return user information if token is valid
     return { valid: true, data };
   } catch (error) {
     console.error("Error validating token:", error);
     return { valid: false, message: "Error verifying token" };
+  }
+};
+
+// Function to generate JWT token for session
+const generateSessionToken = (userId, googleId) => {
+  return jwt.sign({ userId, googleId }, JWT_SECRET_KEY, {
+    expiresIn: "1h", // Adjust expiration as needed
+  });
+};
+
+// Function to handle the login logic
+const handleLogin = async (token) => {
+  const validationResponse = await validateToken(token);
+
+  if (!validationResponse.valid) {
+    throw new Error(validationResponse.message);
+  }
+
+  const userData = await fetchUserInfo(token);
+
+  if (!userData || !userData.id) {
+    throw new Error("Invalid token or user info not found");
+  }
+
+  const googleId = validationResponse.data.user_id;
+  const { email, name, picture } = userData;
+
+  // Check if the user exists in the database
+  let user = await User.findOne({ where: { googleId } });
+
+  if (user) {
+    // If user exists, update their information
+    await user.update({ name, picture });
+
+    // Generate session token
+    const ssToken = generateSessionToken(user.id, googleId);
+
+    return { user, ssToken, message: "Login successful" };
+  } else {
+    // If user does not exist, create a new one
+    user = await User.create({ googleId, name, email, picture });
+
+    // Generate session token
+    const ssToken = generateSessionToken(user.id, googleId);
+
+    return { user, ssToken, message: "User created successfully" };
   }
 };
 
@@ -55,82 +100,27 @@ router.post("/login", async (req, res) => {
   }
 
   try {
-    // Validate the token
-    const validationResponse = await validateToken(token);
-    if (!validationResponse.valid) {
-      return res.status(401).json({ message: validationResponse.message });
-    }
+    const { user, ssToken, message } = await handleLogin(token);
 
-    const userData = await fetchUserInfo(token);
-
-    if (!userData || !userData.id) {
-      return res
-        .status(401)
-        .json({ message: "Invalid token or user info not found" });
-    }
-
-    // Extract the payload from the validated token
-    const { data } = validationResponse;
-    const googleId = data.user_id; // This is the Google ID you use to identify the user
-
-    // Check if the user already exists in the database
-    let user = await User.findOne({ where: { googleId } });
-
-    const { email, name, picture } = userData;
-
-    if (user) {
-      // If user exists, return login success
-      await user.update({
-        name: name,
-        picture: picture,
-      });
-
-      const ssToken = jwt.sign({ userId: user.id, googleId }, JWT_SECRET_KEY, {
-        expiresIn: "1h", // You can adjust the expiration time as needed
-      });
-
-      return res.status(200).json({
-        message: "Login successful",
-        id: user.id,
-        name,
-        email,
-        picture,
-        googleId: googleId,
-        ssToken,
-      });
-    } else {
-      // If user does not exist, create a new user
-      user = await User.create({
-        googleId,
-        name: data.name,
-        email: data.email,
-        picture: data.picture,
-      });
-
-      const ssToken = jwt.sign({ userId: user.id, googleId }, JWT_SECRET_KEY, {
-        expiresIn: "1h", // You can adjust the expiration time as needed
-      });
-
-      return res.status(201).json({
-        message: "User created successfully",
-        userId: user.id,
-        name: user.name,
-        picture: user.picture,
-        googleId: googleId,
-        ssToken,
-      });
-    }
+    return res.status(user ? 200 : 201).json({
+      message,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      picture: user.picture,
+      googleId: user.googleId,
+      ssToken,
+    });
   } catch (error) {
     console.error("Error during login process:", error);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: error.message || "Server error" });
   }
 });
 
-// Route to login
+// POST /logout - Clear authentication cookie
 router.post("/logout", (req, res) => {
-  const { username, password } = req.body;
   // Clear the authentication cookie
-  res.clearCookie("token", { path: "/" }); // Adjust path and domain if needed
+  res.clearCookie("token", { path: "/" });
   res.json({ message: "Logged out successfully" });
 });
 
