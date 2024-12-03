@@ -1,67 +1,91 @@
-# Smart Summarize Chrome Extension
+# Smart Summarize - Chrome Extension
 
-**Smart Summarize** is a cutting-edge Chrome extension that brings efficiency and intelligence to your web browsing experience. Whether you're reading articles, analyzing code, or working with documents, Smart Summarize helps you save time and extract relevant information effortlessly.
+**Smart Summarize** is a powerful Chrome extension designed to enhance your browsing experience by summarizing content and providing intelligent responses effortlessly.
 
-## Key Features
+---
 
-### 1. **Web Page Summarization**
-   - Generate concise summaries of the content on the current web page, saving you time and effort while browsing. Whether it’s an article, blog post, or news page, you’ll quickly get the essential points.
+## 🚀 Features
 
-### 2. **File-Based Summarization**
-   - Summarize text from a variety of file types:
-     - **PDFs** (`application/pdf`)
-     - **JavaScript files** (`application/x-javascript`, `text/javascript`)
-     - **Python files** (`application/x-python`, `text/x-python`)
-     - **Plain text files** (`text/plain`)
-     - **HTML documents** (`text/html`)
-     - **CSS files** (`text/css`)
-     - **Markdown files** (`text/md`)
-     - **CSV files** (`text/csv`)
-     - **XML files** (`text/xml`)
-     - **RTF documents** (`text/rtf`)
+### 🔹 Web Page Summarization
+- Generate concise summaries of the content on the current webpage.
 
-### 3. **Custom Query Feature**
-   - Easily ask questions about the current webpage or content using a convenient checkbox. 
-     - **For articles**: Quickly inquire about the publication date, author, and more.
-     - **For platforms like Stack Overflow**: Extract details such as the author, post date, and more.
+### 🔹 File-Based Summarization
+Summarize text from various supported file types:
+- **PDFs**: `application/pdf`
+- **JavaScript files**: `application/x-javascript`, `text/javascript`
+- **Python files**: `application/x-python`, `text/x-python`
+- **Plain text files**: `text/plain`
+- **HTML documents**: `text/html`
+- **CSS files**: `text/css`
+- **Markdown files**: `text/md`
+- **CSV files**: `text/csv`
+- **XML files**: `text/xml`
+- **RTF documents**: `text/rtf`
 
-### 4. **Integrated AI Assistant**
-   - Users can interact with a default **LLM (1.5 Flash Google)** to ask anything and get AI-driven insights, explanations, and answers on a wide range of topics.
-   
-### 5. **Authentication & Authorization**
-   - The extension uses **Chrome Identity API** to authenticate users with Google OAuth2 credentials.
-   - Token validation and user verification are handled through the backend, built on an **Express server**.
+### 🔹 Custom Query Feature
+- Ask specific questions about the current webpage with a convenient checkbox:
+  - **For articles**: Extract details like publication date and author.
+  - **For platforms like Stack Overflow**: Fetch the question's author, post date, and more.
 
-## Setup Instructions
+### 🔹 Integrated AI Assistant
+- Utilize the built-in LLM (1.5 Flash Google) to ask questions and receive AI-driven insights on various topics.
 
-### 1. **OAuth Client ID Configuration**
+---
+
+## 🔒 Authentication & Authorization
+
+- Uses **Chrome Identity API** to authenticate users via Google OAuth2.
+- Backend (Express) verifies Google ID tokens to ensure secure access.
+- **Setup Notes**:
+  - Add the OAuth Client ID from Google Cloud's Gemini API to the manifest.
+  - Ensure the extension ID matches across configurations to avoid errors such as:
+    ```
+    Service responded with error: 'bad client id: 15131531312312315315315315.apps.googleusercontent.com'
+    ```
+  - Enable Summarization and Prompt APIs from [Chrome Origin Trials](https://developer.chrome.com/origintrials).
+
+---
+
+## 🛠️ Tech Stack
+
+### **Frontend**
+- **Google Chrome Extension**: Using Google Chrome’s built-in AI models (Gemini Nano).
+- **Libraries**:
+  - React, React-Router-Dom, Shadcn, Tailwind, React-Context
+
+### **Backend**
+- Node.js, Express, Sequelize, Google Gemini API
+Login : http://localhost:3000/api/auth/login 
+(it post with token, so api validate token, if validated, then get the userinfo, then if user exist then it update user table, if not it create a new user on database and return user with jwt token which will send to React AuthContext )
+
+Required JWT token 
+user/update : http://localhost:3000/api/protected/user/${user?.id} it validate the jwt tokena nd updates the Gemeni Key to the user table. 
+
+get/user/:id : http://localhost:3000/api/protected/user/${user?.id} it validate the jwt token and get user information with Genimi API Key
+
+process-files : http://localhost:3000/api/protected/generativeai/process-files
+it takes multipart/form-data with files and express store the files in memory using multer them file buffer to string base64Data then get APIKey from user table then send to Gemeni model to generate content for documents 
+
+generate-content-stream : http://localhost:3000/api/protected/generativeai/generate-content-stream
+it get prompt and history, then validate and get user from JWT Token, ready to send as stream, get Gemini API Key from user table. then utilize the startChat using Gemini Model and send the response as stream as chuck.
+---
+
+
+
+### How to Start the Application
+
+
+### **Chrome Extension Setup**
    - Add the OAuth Client ID from Google Cloud Gemeni API to the `manifest.json` of the Chrome extension.
    - Ensure the **Item ID** in the extension matches the one in the manifest, or you will get an error:
      ```
      Service responded with error: 'bad client id: 15131531312312315315315315.apps.googleusercontent.com'
      ```
+   - Add trial_tokens to the manifest.json insde the client/dist/folder.
+   - Make sure to enable Prompt API for Gemini Nano and  Summarization API for Gemini Nano in chrome://flags/
+   - Chrome versiomn running in Chrome 131 to 136 for Chrome Canary 
+   - Activate the trial for Summarization API and Prompt API for Chrome Extensions for https://developer.chrome.com/origintrials/#/trials/active
 
-### 2. **Integrate Summarization API & Prompt API**
-   - Use the **Google Chrome AI APIs** for Summarization and Prompt APIs:  
-     - [Summarize API](https://developer.chrome.com/docs/ai/summarizer-api)
-     - [Prompt API](https://developer.chrome.com/docs/extensions/ai/prompt-api)
-   - Also, integrate **Google Gemini API**:
-     - [Prompt API](https://ai.google.dev/gemini-api/docs/text-generation?lang=node)
-     - [Document Processing](https://ai.google.dev/gemini-api/docs/document-processing?lang=node)
-   - Ensure that the **Chrome extension ID** is the same in the API configuration.
-
-## Tech Stack
-
-### Frontend:
-   - **Google Chrome Extension** using **Google Chrome’s built-in AI models** (Gemini Nano).
-   - **React**, **React Router**, **Shadcn**, **Tailwind**, **React Context** for efficient state management.
-
-### Backend:
-   - **Node.js** and **Express** for backend logic and handling API requests.
-   - **Sequelize** for ORM and database management with MySQL.
-   - **Google Gemini API** for AI-powered summarization and document processing.
-
-## How to Start the Application
 
 ### Backend Setup (Express)
 1. Create a `.env` file in the main folder by copying `env.example`.
@@ -71,3 +95,11 @@
    ```bash
    npm install
    npm start
+   
+### Frontend Setup (React + Chrome Extension)
+1. dis folder is included to upload on chrome exntension. 
+2. Create a `.env` file in the main folder by copying `env.example`.
+3. VITE_CHROME_AI_PROMPT will activate prompt api using Gemini nano, if false then it use the Gemini Flash 1.5 which is written in express api. 
+npm install
+npm run build
+upload the file to chrome extension 
