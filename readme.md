@@ -92,3 +92,16 @@ it get prompt and history, then validate and get user from JWT Token, ready to s
 npm install
 npm run build
 upload the file to chrome extension 
+
+
+### Bugs Open 
+
+https://issues.chromium.org/issues/380707232
+
+https://issues.chromium.org/issues/380712811
+
+https://issues.chromium.org/issues/381535058
+
+
+Add support for buffers in uploadFile _ I had same issues so use memorystorage also comment on Github issues. 
+https://github.com/google-gemini/generative-ai-js/issues/294
