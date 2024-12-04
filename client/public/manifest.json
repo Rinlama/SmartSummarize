@@ -47,7 +47,7 @@
     "script-src": ["'self'", "https://accounts.google.com"]
   },
   "oauth2": {
-    "client_id": "971984779347-vcr7jp5uvt04h8oukamtg94nl77l27tt.apps.googleusercontent.com",
+    "client_id": "401809524894-99jas61k8b53qkplhrbdslqa8d8phigv.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/userinfo.profile"

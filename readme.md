@@ -66,7 +66,9 @@ it get prompt and history, then validate and get user from JWT Token, ready to s
 ### How to Start the Application
 
 ##### **Chrome Extension Setup**
-   - Add the OAuth Client ID from Google Console to the `manifest.json` of the Chrome extension.
+   - Create OAuth consent  on Google Console with https://developers.google.com/workspace/guides/configure-oauth-consent
+   - Create OAUth Client Id for Chrome Extension and Item id of Chrome Extension which generate after upload to Chrome Canaray
+   - Then, add the OAuth Client ID from Google Console to the `manifest.json` of the Chrome extension.
    - Ensure the **Item ID** in the extension matches the one in the manifest, or you will get an error:
      ```
      Service responded with error: 'bad client id: 15131531312312315315315315.apps.googleusercontent.com'

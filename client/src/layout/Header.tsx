@@ -31,6 +31,7 @@ function Header() {
         _account: any,
         _signedIn: boolean
       ) {
+        console.log("Sign-in state changed.");
         chrome.identity.clearAllCachedAuthTokens(() => {
           if (location.hash === "#/auth") {
             location.hash = "#/refresh";

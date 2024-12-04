@@ -75,7 +75,7 @@ const startServer = async () => {
   try {
     const forceSync = process.env.FORCE_SYNC === "true";
 
-    await db.sequelize.sync({ force: FORCE_SYNC });
+    await db.sequelize.sync({ force: forceSync });
     app.listen(PORT, () => {
       console.log(`App is running on port ${PORT}`);
     });
